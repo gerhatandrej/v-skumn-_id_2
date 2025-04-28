@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <title>Generátor výskumného ID</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 400px;
+      margin: 60px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    #result {
+      margin-top: 20px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h2>Získaj svoje výskumné ID</h2>
+  <form id="idForm">
+    <input type="email" id="email" placeholder="Zadaj svoj e-mail" required>
+    <button type="submit">Získať ID</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    // Inicializácia EmailJS
+    emailjs.init("vn3f9l_KZwCYDZpKQ"); // Tvoj Public Key
+
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwJmvZcJ1XfCA-w_2MT78LEhYRB4IITbYRBHlwBfAiFgpg4NczayBzdSF8yxOVU6Vuz/exec"; // Tvoje nové URL
+
+    const form = document.getElementById("idForm");
+    const result = document.getElementById("result");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      result.textContent = "Generujem a odosielam ID...";
+
+      const callbackName = "onIDResponse_" + Date.now();
+      const script = document.createElement("script");
+      script.src = `${scriptURL}?callback=${callbackName}&r=${Math.random()}`;
+
+      window[callbackName] = async function(data) {
+        if (data.error) {
+          result.textContent = data.error;
+        } else {
+          try {
+            await emailjs.send(
+              "service_f4uey2k", // Tvoj Service ID
+              "template_gn415fl", // Tvoj Template ID
+              { email: email, message: `Vaše výskumné ID je: ${data.id}` }
+            );
+            result.textContent = `ID ${data.id} bolo odoslané na ${email}.`;
+          } catch (err) {
+            console.error("EmailJS chyba:", err);
+            result.textContent = "Chyba pri odoslaní e-mailu.";
+          }
+        }
+        document.body.removeChild(script);
+        delete window[callbackName];
+      };
+
+      script.onerror = function() {
+        result.textContent = "Nepodarilo sa získať ID.";
+        document.body.removeChild(script);
+        delete window[callbackName];
+      };
+
+      document.body.appendChild(script);
+    });
+  </script>
+</body>
+</html>
